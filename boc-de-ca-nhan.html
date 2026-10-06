@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bốc Đề Claude Code</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2622;--mut:#7a7068;--line:#e8e0d6;--acc:#d97757;--acc2:#b85c3e;--soft:#fbeee8;--code:#2b2622;--codeink:#f6efe8;--dsoft:#e9eef9;--dink:#3d5a9e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1a17;--card:#2a2622;--ink:#f1ece6;--mut:#a89e94;--line:#3d3731;--acc:#e8896a;--acc2:#f0a088;--soft:#3a2a23;--code:#141210;--dsoft:#232c40;--dink:#9db4e8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{margin:0;font-size:20px}
+header h1 span{color:var(--acc)}
+main{max-width:760px;margin:0 auto;padding:24px 16px 80px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button.pri:hover{background:var(--acc2)}
+button.big{padding:16px 36px;font-size:20px;border-radius:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.hint{color:var(--mut);font-size:14px}
+.hero{text-align:center;padding:56px 20px}
+.hero .dice{font-size:64px;line-height:1}
+.hero h2{margin:12px 0 6px;font-size:26px}
+.hero p{color:var(--mut);margin:0 0 28px}
+.slot{font-size:30px;font-weight:800;min-height:48px;color:var(--acc);margin:8px 0 4px;word-break:break-word}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.spacer{flex:1}
+.timer{font-variant-numeric:tabular-nums;font-size:30px;font-weight:700;padding:2px 14px;border-radius:10px;background:var(--soft);color:var(--acc2)}
+.timer.low{color:#d33;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.5}}
+.topic{border-left:6px solid var(--acc)}
+.ch-title{font-size:24px;font-weight:700;margin:2px 0 6px}
+.ch-title .emo{font-size:32px;margin-right:8px}
+h3{margin:18px 0 6px;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+ul.req{margin:0;padding-left:22px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;background:var(--bg)}
+.step b{color:var(--acc2)}
+.tip{font-size:14px;color:var(--mut);margin:2px 0 6px}
+.prompt{position:relative;background:var(--code);color:var(--codeink);border-radius:8px;padding:10px 70px 10px 12px;font:14px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
+.prompt button{position:absolute;top:6px;right:6px;padding:3px 9px;font-size:12px}
+.phase{margin:22px 0 4px;font-weight:700;font-size:15px;padding:6px 12px;border-radius:8px;display:inline-block}
+.phase.design{background:var(--dsoft);color:var(--dink)}
+.phase.build{background:var(--soft);color:var(--acc2)}
+.step.design{border-left:4px solid var(--dink)}
+.step.design b{color:var(--dink)}
+.step.build{border-left:4px solid var(--acc)}
+details summary{cursor:pointer;font-weight:600;color:var(--acc2)}
+.pop{animation:pop .5s ease}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.hidden{display:none!important}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:20px}
+@media(max-width:480px){.timer{font-size:24px}.ch-title{font-size:20px}.slot{font-size:24px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎲 Bốc đề <span>Claude Code</span></h1>
+  <div class="hint">Mỗi người 1 app · Vẽ trước, xây sau · 15 phút</div>
+</header>
+<main>
+
+<section id="start" class="card hero">
+  <div class="dice">🎲</div>
+  <h2>Sẵn sàng nhận đề chưa?</h2>
+  <p>Bấm nút bên dưới, máy sẽ chọn ngẫu nhiên cho bạn 1 trong 16 đề.</p>
+  <button class="pri big" id="go">🎲 Chọn chủ đề</button>
+</section>
+
+<section id="drawing" class="card hero hidden">
+  <div class="hint" id="drawLabel">Đang chọn đề cho bạn...</div>
+  <div class="slot" id="slot">?</div>
+</section>
+
+<section id="result" class="hidden">
+  <div class="bar">
+    <div class="timer" id="timer">15:00</div>
+    <button class="pri" id="tStart">▶ Bắt đầu</button>
+    <button id="tReset">↺ Reset</button>
+    <div class="spacer"></div>
+    <button id="reroll">🎲 Đổi đề khác</button>
+    <button id="copyAll">📋 Copy đề</button>
+  </div>
+  <div id="topic"></div>
+</section>
+
+</main>
+<footer>Kho đề: 16 app nhỏ · đề của bạn được lưu trong trình duyệt này</footer>
+
+<script>
+// ============ KHO ĐỀ BÀI ============
+// Mỗi bước: t = tiêu đề, tip = tính năng Claude Code cần thử, p = prompt mẫu
+const C = [
+{e:"✅",n:"Todo List",d:"Danh sách việc cần làm có lọc và lưu lại khi tải lại trang.",
+ r:["Thêm / xoá / tick hoàn thành","Lọc: Tất cả · Đang làm · Xong","Lưu bằng localStorage","Đếm số việc còn lại"],
+ s:[["Lên kế hoạch trước khi code","Bấm Shift+Tab để vào Plan mode","Tôi muốn làm app Todo List bằng 1 file index.html (HTML/CSS/JS thuần). Hãy đề xuất kế hoạch ngắn gồm giao diện, dữ liệu và các hàm chính. Chưa viết code."],
+    ["Cho Claude làm theo kế hoạch","Duyệt plan để Claude bắt đầu","Ok, hãy làm theo kế hoạch. Tính năng: thêm/xoá/tick việc, bộ lọc Tất cả/Đang làm/Xong, đếm việc còn lại, lưu localStorage. Giao diện hiện đại, tiếng Việt."],
+    ["Chạy thử & sửa lỗi","Mở file trong trình duyệt, dán lỗi hoặc mô tả sai cho Claude","Tôi mở index.html và thấy [mô tả lỗi]. Hãy tìm nguyên nhân và sửa."],
+    ["Thêm tính năng","Dùng @index.html để tham chiếu file","Với @index.html, thêm tính năng: bấm đúp để sửa tên việc và nút 'Xoá tất cả việc đã xong'."]],
+ b:"Thêm kéo-thả để sắp xếp thứ tự."},
+{e:"🍅",n:"Đồng hồ Pomodoro",d:"Đồng hồ tập trung 25 phút, nghỉ 5 phút, có đếm số phiên.",
+ r:["Đếm ngược 25' làm việc / 5' nghỉ","Start · Pause · Reset","Âm báo hoặc đổi màu khi hết giờ","Đếm số phiên đã hoàn thành trong ngày"],
+ s:[["Mô tả yêu cầu bằng lời","Prompt càng cụ thể càng ít phải sửa","Tạo app Pomodoro trong 1 file index.html thuần HTML/CSS/JS: đếm ngược 25 phút làm việc và 5 phút nghỉ tự chuyển, nút Start/Pause/Reset, vòng tròn tiến độ, đếm số phiên. Tiếng Việt."],
+    ["Kiểm tra nhanh thời gian","Yêu cầu Claude tạo chế độ test","Thêm chế độ test: nút nhỏ 'x60' để tua nhanh thời gian giúp tôi thử hết giờ mà không phải đợi."],
+    ["Thêm âm báo","Hỏi Claude cách làm không cần file âm thanh","Khi hết giờ hãy phát tiếng bíp bằng Web Audio API (không dùng file ngoài) và đổi màu nền."],
+    ["Lưu số phiên","Dùng /clear nếu muốn bắt đầu cuộc trò chuyện mới gọn hơn","Lưu số phiên hoàn thành theo ngày vào localStorage và hiển thị 'Hôm nay: N phiên'."]],
+ b:"Cho chỉnh độ dài phiên làm việc/nghỉ."},
+{e:"💱",n:"Đổi tiền tệ",d:"Chuyển đổi VND, USD, JPY, EUR với tỷ giá nhập tay.",
+ r:["Nhập số tiền và chọn đơn vị gốc/đích","Tỷ giá cố định trong code, có thể sửa","Nút đảo chiều ⇄","Hiển thị kết quả có dấu phân cách hàng nghìn"],
+ s:[["Yêu cầu Claude hỏi lại","Cho phép Claude đặt câu hỏi làm rõ","Tôi muốn làm app đổi tiền VND/USD/JPY/EUR trong 1 file index.html. Hãy hỏi tôi 3 câu để làm rõ yêu cầu trước khi code."],
+    ["Làm bản đầu tiên","Trả lời câu hỏi rồi để Claude code","Hãy làm theo yêu cầu, tỷ giá mẫu 1 USD=25.000 VND, 1 EUR=27.000 VND, 1 JPY=165 VND. Có nút đảo chiều."],
+    ["Tạo CLAUDE.md","Gõ /init hoặc nhờ Claude ghi lại quy ước dự án","Tạo file CLAUDE.md ghi: dự án là 1 file index.html thuần, không dùng framework, giao diện tiếng Việt."],
+    ["Mở rộng","Claude sẽ đọc CLAUDE.md tự động","Thêm bảng 'tỷ giá' cho người dùng sửa trực tiếp và lưu vào localStorage."]],
+ b:"Gọi API tỷ giá thật (nếu có mạng)."},
+{e:"🧠",n:"Quiz trắc nghiệm",d:"Bộ câu hỏi về chủ đề tuỳ chọn, có chấm điểm cuối bài.",
+ r:["10 câu hỏi, mỗi câu 4 đáp án","Hiện đúng/sai ngay sau khi chọn","Tổng điểm và nút làm lại","Thanh tiến độ"],
+ s:[["Nhờ Claude sinh nội dung","Claude vừa viết code vừa tạo dữ liệu","Tạo app quiz 10 câu về chủ đề 'Kiến thức văn phòng IT' trong 1 file index.html. Tách dữ liệu câu hỏi thành mảng ở đầu file."],
+    ["Chỉnh sửa nội dung","Dùng @index.html để Claude sửa đúng chỗ","Với @index.html, đổi chủ đề sang [chủ đề nhóm bạn chọn] và viết lại 10 câu hỏi."],
+    ["Thêm hiệu ứng","Yêu cầu UI cụ thể","Thêm hiệu ứng xanh/đỏ khi trả lời đúng/sai, và màn hình kết quả có lời nhận xét theo mức điểm."],
+    ["Review code","Nhờ Claude tự rà soát","Hãy review index.html, chỉ ra tối đa 3 điểm có thể cải thiện và sửa giúp tôi."]],
+ b:"Xáo trộn thứ tự câu hỏi mỗi lần chơi."},
+{e:"💸",n:"Tính tiền tip & chia bill",d:"Chia hoá đơn cho nhiều người kèm tip %.",
+ r:["Nhập tổng bill, % tip, số người","Hiển thị tip, tổng và tiền mỗi người","Nút chọn nhanh 5% · 10% · 15%","Làm tròn lên theo 1.000đ"],
+ s:[["Bắt đầu đơn giản","Prompt ngắn, rõ","Làm app tính tip và chia bill trong 1 file index.html. Nhập tổng bill, % tip, số người; hiển thị tiền mỗi người. Tiếng Việt, định dạng VND."],
+    ["Thêm nút nhanh","Lặp lại để cải thiện từng chút","Thêm nút chọn nhanh 5%, 10%, 15% và tuỳ chỉnh. Làm tròn tiền mỗi người lên 1.000đ."],
+    ["Xử lý lỗi nhập","Nhờ Claude nghĩ các tình huống biên","Liệt kê các trường hợp nhập sai (số âm, trống, 0 người) rồi xử lý hết trong code."],
+    ["Làm đẹp","Cho Claude chọn phong cách","Làm giao diện dạng thẻ giống app thanh toán, phối màu ấm, hỗ trợ dark mode."]],
+ b:"Cho nhập tên từng người và phần ăn riêng."},
+{e:"🔐",n:"Tạo mật khẩu mạnh",d:"Công cụ sinh mật khẩu ngẫu nhiên với tuỳ chọn.",
+ r:["Độ dài 8–32 bằng thanh trượt","Chọn: chữ hoa, số, ký tự đặc biệt","Nút copy","Thanh đánh giá độ mạnh"],
+ s:[["Mô tả và làm bản đầu","Nêu rõ giới hạn kỹ thuật","Làm công cụ sinh mật khẩu trong 1 file index.html, dùng crypto.getRandomValues. Có thanh trượt độ dài 8–32 và các checkbox loại ký tự."],
+    ["Thêm copy","Thử Claude với chi tiết nhỏ","Thêm nút Copy dùng clipboard API, hiện thông báo 'Đã copy' 2 giây."],
+    ["Độ mạnh","Yêu cầu giải thích","Thêm thanh đo độ mạnh (yếu/vừa/mạnh) và giải thích ngắn công thức bạn dùng."],
+    ["Test","Nhờ Claude viết thử","Viết một vài đoạn test bằng console.assert ở cuối file cho hàm sinh mật khẩu."]],
+ b:"Lưu lịch sử 5 mật khẩu gần nhất (chỉ trong phiên)."},
+{e:"🎯",n:"Game đoán số",d:"Máy nghĩ 1 số từ 1–100, người chơi đoán, có gợi ý cao/thấp.",
+ r:["Số ngẫu nhiên 1–100","Gợi ý 'cao hơn / thấp hơn'","Đếm số lượt","Lưu kỷ lục ít lượt nhất"],
+ s:[["Một câu là đủ","Thử prompt ngắn gọn","Làm game đoán số 1–100 trong 1 file index.html, có gợi ý cao/thấp và đếm lượt. Giao diện vui nhộn, tiếng Việt."],
+    ["Thêm kỷ lục","Dùng /clear giữa các nhiệm vụ không liên quan","Lưu kỷ lục ít lượt nhất vào localStorage và hiện trên màn hình."],
+    ["Thêm độ khó","Để Claude đề xuất","Thêm 3 độ khó: Dễ 1–50, Vừa 1–100, Khó 1–1000 và giới hạn số lượt."],
+    ["Hiệu ứng thắng","Yêu cầu trực quan","Khi đoán đúng hãy bắn pháo hoa confetti bằng canvas (không dùng thư viện)."]],
+ b:"Chế độ 2 người chơi thay phiên."},
+{e:"🐍",n:"Game rắn săn mồi",d:"Snake cổ điển điều khiển bằng phím mũi tên.",
+ r:["Rắn di chuyển, ăn mồi dài ra","Thua khi đụng tường hoặc thân","Hiển thị điểm và điểm cao","Nút chơi lại"],
+ s:[["Lên kế hoạch cho việc lớn hơn","Dùng Plan mode với app có logic phức tạp","Tôi muốn game Snake trong 1 file index.html dùng canvas. Hãy lập kế hoạch: vòng lặp game, cấu trúc dữ liệu rắn, va chạm. Chưa code."],
+    ["Làm theo kế hoạch","Duyệt plan","Tiến hành code theo kế hoạch. Điều khiển bằng phím mũi tên, tốc độ vừa phải."],
+    ["Gỡ lỗi","Mô tả hiện tượng thật cụ thể","Rắn quay đầu 180° bị chết ngay. Hãy tìm lỗi và sửa."],
+    ["Tăng độ vui","Cho Claude sáng tạo","Tăng tốc dần theo điểm, thêm điều khiển cảm ứng vuốt cho điện thoại."]],
+ b:"Thêm vật cản hoặc mồi đặc biệt."},
+{e:"🃏",n:"Game lật thẻ ghi nhớ",d:"Lật 2 thẻ để tìm cặp giống nhau.",
+ r:["Lưới 4x4 gồm 8 cặp emoji","Lật thẻ có hiệu ứng","Đếm số lượt và thời gian","Thắng thì có thông báo"],
+ s:[["Nêu yêu cầu rõ","Càng rõ càng ít vòng lặp","Làm game lật thẻ ghi nhớ 4x4 với 8 cặp emoji trong 1 file index.html. Có hiệu ứng lật 3D bằng CSS, đếm lượt."],
+    ["Thêm thời gian","Yêu cầu từng tính năng nhỏ","Thêm đồng hồ bấm giờ, bắt đầu khi lật thẻ đầu tiên, dừng khi thắng."],
+    ["Kiểm tra bug","Nhờ Claude tự test bằng cách đọc code","Hãy đọc code và liệt kê bug có thể xảy ra khi bấm nhanh liên tục nhiều thẻ, rồi sửa."],
+    ["Lưu kỷ lục","Hoàn thiện","Lưu thời gian nhanh nhất vào localStorage."]],
+ b:"Chọn kích thước bảng 4x4 / 6x6."},
+{e:"⚖️",n:"Tính BMI & lời khuyên",d:"Tính chỉ số BMI và phân loại, có biểu đồ vị trí.",
+ r:["Nhập chiều cao (cm) và cân nặng (kg)","Hiển thị BMI và phân loại","Thanh màu chỉ vị trí của bạn","Cảnh báo khi nhập vô lý"],
+ s:[["Bản đầu tiên","Prompt đủ ý","Làm app tính BMI trong 1 file index.html, phân loại theo chuẩn châu Á, có thanh màu chỉ vị trí. Tiếng Việt."],
+    ["Xác thực dữ liệu","Hỏi Claude giá trị hợp lý","Thêm kiểm tra dữ liệu nhập: chiều cao 100–230cm, cân nặng 20–250kg và báo lỗi thân thiện."],
+    ["Thêm lời khuyên","Nhớ thêm lưu ý không phải tư vấn y tế","Thêm lời khuyên ngắn theo từng nhóm, kèm dòng lưu ý 'chỉ mang tính tham khảo'."],
+    ["Lưu lịch sử","Dùng localStorage","Lưu các lần đo và vẽ biểu đồ đường đơn giản bằng canvas."]],
+ b:"Tính thêm lượng calo cơ bản (BMR)."},
+{e:"📝",n:"Ghi chú nhanh có thẻ tag",d:"Sổ ghi chú đơn giản với tìm kiếm và gắn thẻ.",
+ r:["Tạo / sửa / xoá ghi chú","Gắn thẻ #tag","Ô tìm kiếm lọc tức thì","Lưu localStorage"],
+ s:[["Lên kế hoạch","Plan mode","Tôi muốn app ghi chú trong 1 file index.html. Đề xuất cách tổ chức dữ liệu và UI 2 cột (danh sách / soạn thảo). Chưa code."],
+    ["Làm theo plan","Duyệt","Làm theo kế hoạch, có tạo/sửa/xoá và lưu localStorage."],
+    ["Thêm tìm kiếm & tag","Dùng @index.html","Với @index.html thêm ô tìm kiếm lọc tức thì và gắn thẻ bằng cú pháp #tag, bấm vào tag để lọc."],
+    ["Xuất dữ liệu","Thử yêu cầu tính năng file","Thêm nút 'Tải về JSON' để sao lưu và nút nhập lại từ file."]],
+ b:"Hỗ trợ Markdown cơ bản."},
+{e:"🎨",n:"Chọn bảng màu",d:"Tạo bảng màu hài hoà và copy mã màu.",
+ r:["Nút tạo 5 màu ngẫu nhiên","Khoá màu muốn giữ lại","Bấm vào màu để copy mã HEX","Xem trước trên 1 thẻ giao diện mẫu"],
+ s:[["Mô tả trực quan","Claude hiểu mô tả giao diện tốt","Làm app tạo bảng màu 5 màu giống Coolors trong 1 file index.html: bấm Space hoặc nút để tạo mới, có icon khoá để giữ màu."],
+    ["Copy mã màu","Thêm tương tác","Bấm vào màu để copy mã HEX, hiện toast 'Đã copy #xxxxxx'."],
+    ["Màu hài hoà","Hỏi Claude về thuật toán","Thay vì ngẫu nhiên hoàn toàn, sinh màu theo HSL để các màu hài hoà. Giải thích cách làm ngắn gọn."],
+    ["Xem trước","Hoàn thiện","Thêm khu xem trước: 1 thẻ sản phẩm mẫu dùng 5 màu đã chọn."]],
+ b:"Lưu bảng màu yêu thích."},
+{e:"📊",n:"Bảng điểm trận đấu",d:"Bảng điểm cho nhiều đội trong cuộc thi nội bộ.",
+ r:["Thêm / xoá đội","Nút +1 / +5 / -1 cho từng đội","Tự sắp xếp theo điểm cao nhất","Lưu localStorage"],
+ s:[["Bắt đầu","Prompt cụ thể","Làm bảng điểm cho các đội trong 1 file index.html: thêm đội, nút +1/+5/-1, tự xếp hạng, hiển thị cỡ lớn để chiếu màn hình."],
+    ["Thêm hiệu ứng xếp hạng","Yêu cầu animation","Khi thứ hạng thay đổi, các hàng trượt mượt tới vị trí mới."],
+    ["Chế độ trình chiếu","Thử với yêu cầu UX","Thêm nút toàn màn hình với chữ rất lớn, tự ẩn các nút chỉnh sửa."],
+    ["Hoàn tác","Nhờ Claude thiết kế","Thêm nút Undo cho thao tác điểm gần nhất."]],
+ b:"Thêm biểu đồ cột trực quan."},
+{e:"🔢",n:"Máy tính bỏ túi",d:"Calculator có phím bấm và bàn phím.",
+ r:["Cộng, trừ, nhân, chia, %, xoá","Hỗ trợ bàn phím máy tính","Hiển thị lịch sử phép tính","Xử lý chia cho 0"],
+ s:[["Mô tả","Cho Claude làm UI","Làm máy tính bỏ túi trong 1 file index.html với lưới phím giống iPhone. Hỗ trợ bàn phím."],
+    ["Viết test","Nhờ Claude viết test trước","Viết 8 test bằng console.assert cho hàm tính toán (kể cả chia 0 và số thập phân 0.1+0.2), rồi sửa code cho qua hết."],
+    ["Lịch sử","Tham chiếu file","Với @index.html, thêm panel lịch sử 10 phép tính gần nhất, bấm vào để dùng lại kết quả."],
+    ["Dark mode","Yêu cầu nhỏ","Thêm nút đổi giao diện sáng/tối và nhớ lựa chọn."]],
+ b:"Thêm chế độ khoa học (sin, cos, căn)."},
+{e:"⌨️",n:"Test tốc độ gõ phím",d:"Đo WPM và độ chính xác khi gõ đoạn văn.",
+ r:["Hiện đoạn văn ngẫu nhiên","Tô màu ký tự đúng/sai khi gõ","Hiển thị WPM và % chính xác","Đếm ngược 30 giây"],
+ s:[["Bắt đầu","Mô tả luồng chơi","Làm app test gõ phím trong 1 file index.html: hiện 1 đoạn văn, gõ tới đâu tô màu tới đó (xanh đúng, đỏ sai), đo WPM và % chính xác, thời gian 30 giây."],
+    ["Thêm kho văn bản","Claude sinh nội dung","Thêm 10 đoạn văn tiếng Việt ngắn về chủ đề công nghệ, chọn ngẫu nhiên mỗi lượt."],
+    ["Gỡ lỗi","Dán lỗi thật vào","Khi bấm Backspace thì màu bị sai. Hãy đọc code và sửa."],
+    ["Kỷ lục","Hoàn thiện","Lưu WPM cao nhất vào localStorage và hiện bảng top 5."]],
+ b:"Thêm chế độ gõ tiếng Anh."},
+{e:"💧",n:"Theo dõi uống nước",d:"Nhắc và ghi lại lượng nước uống mỗi ngày.",
+ r:["Mục tiêu mỗi ngày (mặc định 2000ml)","Nút +200 / +500 ml","Hình cốc nước dâng lên theo tiến độ","Tự reset theo ngày, lưu lịch sử 7 ngày"],
+ s:[["Mô tả","Prompt rõ mục tiêu","Làm app theo dõi uống nước trong 1 file index.html: mục tiêu 2000ml, nút +200/+500ml, hình ly nước dâng lên bằng CSS, lưu localStorage."],
+    ["Lịch sử 7 ngày","Yêu cầu dữ liệu theo ngày","Lưu theo ngày và hiện biểu đồ cột 7 ngày gần nhất bằng canvas hoặc div."],
+    ["Nhắc uống nước","Thử thông báo","Thêm nút bật thông báo trình duyệt nhắc mỗi 45 phút khi đang mở trang."],
+    ["Review","Tự rà soát","Hãy review code về xử lý chuyển ngày (qua nửa đêm) và sửa nếu có vấn đề."]],
+ b:"Cho chỉnh mục tiêu theo cân nặng."}
+];
+
+// ============ BẢN VẼ GIAO DIỆN (theo thứ tự C) ============
+// u = bố cục màn hình để Design vẽ, v = gợi ý chỉnh sửa bản vẽ
+const U = [
+{u:"1 cột giữa màn hình: ô nhập việc + nút Thêm ở trên, 3 tab lọc Tất cả/Đang làm/Xong, danh sách việc có checkbox và nút xoá, dòng 'Còn N việc' ở cuối",v:"Làm việc đã xong mờ đi và gạch ngang, thêm trạng thái trống 'Chưa có việc nào 🎉'"},
+{u:"Vòng tròn tiến độ lớn ở giữa với số phút:giây, nhãn 'Tập trung' / 'Nghỉ', 3 nút Start/Pause/Reset bên dưới, dòng 'Hôm nay: N phiên' ở cuối",v:"Vẽ thêm 2 trạng thái màu: đỏ cam khi tập trung, xanh lá khi nghỉ"},
+{u:"Thẻ chuyển đổi: ô nhập số tiền, 2 dropdown đơn vị gốc/đích với nút ⇄ ở giữa, ô kết quả số lớn có dấu phân cách hàng nghìn, dòng tỷ giá nhỏ bên dưới",v:"Thêm cờ quốc gia cạnh mỗi đơn vị và vẽ bản trên điện thoại"},
+{u:"Thanh tiến độ 'Câu 3/10' ở trên, thẻ câu hỏi lớn, 4 nút đáp án dạng lưới 2x2, nút 'Câu tiếp' và màn hình kết quả có điểm số",v:"Vẽ trạng thái đáp án đúng (xanh) và sai (đỏ), cùng màn hình kết quả có lời nhận xét"},
+{u:"Thẻ nhập: tổng bill, hàng nút tip 5%/10%/15%/Tuỳ chỉnh, bộ tăng giảm số người; thẻ kết quả nổi bật: tiền tip, tổng, mỗi người trả",v:"Làm giống app thanh toán với tông màu ấm, vẽ thêm bản dark mode"},
+{u:"Ô hiển thị mật khẩu chữ lớn kèm nút Copy, thanh trượt độ dài 8–32, 3 công tắc Chữ hoa/Số/Ký tự đặc biệt, thanh đo độ mạnh 3 mức",v:"Vẽ thanh độ mạnh ở 3 trạng thái Yếu/Vừa/Mạnh và toast 'Đã copy'"},
+{u:"Tiêu đề vui nhộn, ô nhập số + nút Đoán, vùng gợi ý lớn 'Cao hơn ⬆ / Thấp hơn ⬇', đếm lượt và kỷ lục ở góc",v:"Thêm 3 nút chọn độ khó và màn hình chiến thắng có confetti"},
+{u:"Khung chơi dạng lưới vuông ở giữa, điểm và điểm cao ở trên, nút Chơi lại; màn hình Game Over phủ lên khung chơi",v:"Vẽ phong cách retro pixel và thêm 4 nút mũi tên cảm ứng cho điện thoại"},
+{u:"Lưới 4x4 thẻ úp mặt lưng có hoa văn, thanh trên cùng có số lượt, đồng hồ, nút Chơi lại; vài thẻ đang lật hiện emoji",v:"Vẽ trạng thái cặp đã khớp (mờ đi, viền xanh) và màn hình chiến thắng"},
+{u:"Form 2 ô chiều cao (cm) / cân nặng (kg), nút Tính, số BMI cỡ lớn, nhãn phân loại, thanh màu 4 đoạn có mũi tên chỉ vị trí",v:"Thêm hộp lời khuyên theo từng nhóm và dòng lưu ý 'chỉ mang tính tham khảo'"},
+{u:"2 cột: bên trái ô tìm kiếm + danh sách ghi chú có tag màu, bên phải vùng soạn thảo tiêu đề và nội dung; nút + Ghi chú mới",v:"Vẽ bản điện thoại: danh sách và soạn thảo thành 2 màn hình riêng"},
+{u:"5 dải màu dọc chiếm toàn màn hình, mỗi dải có mã HEX và icon khoá; thanh dưới có nút Tạo mới (Space) và thẻ xem trước giao diện mẫu",v:"Vẽ trạng thái màu đã khoá và toast 'Đã copy #xxxxxx'"},
+{u:"Bảng xếp hạng cỡ lớn để chiếu: mỗi hàng có hạng, tên đội, điểm to, nút +1/+5/-1; ô thêm đội ở trên",v:"Làm nổi bật top 3 (vàng/bạc/đồng) và vẽ chế độ trình chiếu toàn màn hình"},
+{u:"Màn hình hiển thị số lớn căn phải, lưới phím 4x5 giống iPhone (số xám, phép tính màu cam), panel lịch sử bên cạnh",v:"Vẽ cả bản sáng và bản tối"},
+{u:"Đoạn văn mẫu cỡ lớn ở giữa, ký tự đã gõ tô xanh/đỏ, con trỏ nhấp nháy; trên cùng có đồng hồ 30s, WPM, % chính xác",v:"Vẽ màn hình kết quả với WPM to và bảng top 5"},
+{u:"Hình ly nước lớn ở giữa với mực nước theo %, số '1200 / 2000 ml', 2 nút +200 / +500 ml, biểu đồ cột 7 ngày bên dưới",v:"Thêm hiệu ứng gợn sóng mặt nước và trạng thái 'Đạt mục tiêu 🎉'"}
+];
+
+// Luồng "vẽ trước, xây sau": 2 bước Design rồi các bước Claude Code
+function steps(i){
+  const c=C[i],u=U[i],last=c.s[c.s.length-1];
+  return [
+    {ph:"design",t:"Vẽ giao diện",tip:"Mở Design, tạo bản thiết kế mới rồi dán prompt",
+     p:`Thiết kế giao diện cho app "${c.n}": ${c.d}\nBố cục: ${u.u}.\nPhong cách hiện đại, sạch sẽ, chữ tiếng Việt. Vẽ cả bản máy tính và điện thoại.`},
+    {ph:"design",t:"Chỉnh bản vẽ cho ưng",tip:"Sửa trên bản vẽ nhanh hơn sửa code rất nhiều, hãy chỉnh đến khi ưng",
+     p:`${u.v}.`},
+    {ph:"build",t:"Chuyển bản vẽ sang Claude Code",tip:"Gửi bản design sang Claude Code (hoặc chụp màn hình và kéo vào), bấm Shift+Tab để vào Plan mode",
+     p:`Đây là bản thiết kế app "${c.n}". Hãy lập kế hoạch dựng nó thành 1 file index.html thuần HTML/CSS/JS, giữ đúng bố cục, màu sắc và khoảng cách như bản vẽ. Chưa viết code.`},
+    {ph:"build",t:"Xây tính năng",tip:"Duyệt plan để Claude bắt đầu code",
+     p:`Ok, hãy làm theo kế hoạch. Tính năng cần có:\n${c.r.map(x=>'- '+x).join('\n')}`},
+    {ph:"build",t:"So với bản vẽ & sửa",tip:"Mở index.html trong trình duyệt, đặt cạnh bản design để so",
+     p:`Hãy so sánh index.html với bản thiết kế, liệt kê những chỗ lệch (bố cục, màu, cỡ chữ, khoảng cách) và sửa cho khớp. Ngoài ra tôi thấy: [mô tả lỗi nếu có].`},
+    {ph:"build",t:last[0],tip:last[1],p:last[2]}
+  ];
+}
+const PH={design:"① Vẽ trước · Design",build:"② Xây sau · Claude Code"};
+
+// ============ TIỆN ÍCH ============
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const KEY='ccworkshop.solo.v1';
+let state={ch:null};
+try{Object.assign(state,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+function show(id){['start','drawing','result'].forEach(x=>$('#'+x).classList.toggle('hidden',x!==id))}
+
+// ============ BỐC ĐỀ ============
+function draw(final){
+  show('drawing');
+  return new Promise(res=>{
+    const slot=$('#slot'),lab=$('#drawLabel');
+    lab.textContent='Đang chọn đề cho bạn...';
+    let n=0,delay=60;
+    const tick=()=>{
+      const c=n<24?pick(C):C[final];
+      slot.textContent=c.e+' '+c.n;
+      if(n++<24){delay+=n>16?25:0;setTimeout(tick,delay)}
+      else{lab.textContent='Đề của bạn là:';slot.classList.add('pop');setTimeout(()=>{slot.classList.remove('pop');res()},900)}
+    };
+    tick();
+  });
+}
+async function choose(exclude){
+  const pool=C.map((_,i)=>i).filter(i=>i!==exclude);
+  state.ch=pick(pool);save();
+  await draw(state.ch);
+  render();show('result');
+}
+$('#go').onclick=()=>choose(null);
+$('#reroll').onclick=()=>{if(confirm('Đổi sang một đề khác?')){stopTimer();choose(state.ch)}};
+
+// ============ HIỂN THỊ ============
+function topicText(i){
+  const c=C[i],st=steps(i);let ph='';
+  return `ĐỀ: ${c.e} ${c.n}\n${c.d}\n\nYÊU CẦU:\n${c.r.map(x=>'- '+x).join('\n')}\n\nCÁC BƯỚC:\n${st.map((s,j)=>{const h=s.ph!==ph?`\n${PH[ph=s.ph]}\n`:'';return `${h}${j+1}. ${s.t} (${s.tip})\n   Prompt: ${s.p}`}).join('\n')}\n\nThử thách thêm: ${c.b}`;
+}
+function render(){
+  const c=C[state.ch],st=steps(state.ch);let ph='';
+  $('#topic').innerHTML=`<article class="card topic pop">
+    <div class="ch-title"><span class="emo">${c.e}</span>${esc(c.n)}</div>
+    <div>${esc(c.d)}</div>
+    <h3>Yêu cầu</h3>
+    <ul class="req">${c.r.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    ${st.map((s,j)=>`${s.ph!==ph?`<div class="phase ${ph=s.ph}">${PH[s.ph]}</div>`:''}<div class="step ${s.ph}"><b>Bước ${j+1}: ${esc(s.t)}</b>
+      <div class="tip">💡 ${esc(s.tip)}</div>
+      <div class="prompt"><button data-copy="${j}">Copy</button>${esc(s.p)}</div></div>`).join('')}
+    <details><summary>⭐ Thử thách thêm (nếu còn thời gian)</summary><p>${esc(c.b)}</p></details>
+  </article>`;
+}
+function flash(b){const o=b.textContent;b.textContent='Đã copy ✓';setTimeout(()=>b.textContent=o,1200)}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-copy]');if(!b)return;
+  navigator.clipboard.writeText(steps(state.ch)[+b.dataset.copy].p).then(()=>flash(b),()=>{});
+});
+$('#copyAll').onclick=function(){navigator.clipboard.writeText(topicText(state.ch)).then(()=>flash(this),()=>{})};
+
+// ============ ĐỒNG HỒ ============
+const MIN=15;
+let left=MIN*60,iv=null;
+const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+function paint(){const t=$('#timer');t.textContent=fmt(left);t.classList.toggle('low',left<=60&&left>0)}
+function beep(){try{const a=new AudioContext(),o=a.createOscillator();o.connect(a.destination);o.frequency.value=880;o.start();setTimeout(()=>{o.stop();a.close()},700)}catch(e){}}
+function stopTimer(){clearInterval(iv);iv=null;$('#tStart').textContent='▶ Bắt đầu'}
+$('#tStart').onclick=()=>{
+  if(iv){stopTimer();$('#tStart').textContent='▶ Tiếp tục';return}
+  if(left<=0)left=MIN*60;
+  $('#tStart').textContent='⏸ Tạm dừng';
+  iv=setInterval(()=>{left--;paint();if(left<=0){stopTimer();beep();document.title='⏰ Hết giờ!'}},1000);
+};
+$('#tReset').onclick=()=>{stopTimer();left=MIN*60;paint();document.title='Bốc Đề Claude Code'};
+paint();
+
+// Giữ lại đề đã bốc khi tải lại trang
+if(state.ch!=null&&C[state.ch]){render();show('result')}
+</script>
+</body>
+</html>
